@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,17 +21,31 @@ namespace MatchGame
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window//**
+    public partial class MainWindow : Window
     {
-        
+        DispatcherTimer timer = new DispatcherTimer();
+        int tenthsOfSecondsElapsed;
+        int matchesFound;
+
         public MainWindow()
         {
-            InitializeComponent();//**
+            InitializeComponent();
 
+            timer.Interval = TimeSpan.FromSeconds(.1);
+            timer.Tick += Timer_Tick;
             SetUpGame();
         }
 
-       
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            tenthsOfSecondsElapsed++;
+            timeTextBlock.Text = (tenthsOfSecondsElapsed / 10F).ToString("0.0s");
+            if (matchesFound == 8)
+            {
+                timer.Stop();
+                timeTextBlock.Text = timeTextBlock.Text + " - Play again?";
+            }
+        }
 
         private void SetUpGame()
         {
@@ -44,8 +59,6 @@ namespace MatchGame
                 "🦕", "🦕",
                 "🦘", "🦘",
                 "🦔", "🦔",
-                
-                //عناصر الارري كانت 16 لانه عدد البلوكس هو 16, ولازم من كل ايموجي 2 متشابهات
             };
 
             Random random = new Random();// عرفت راندوم عشان اقدر اغير اماكن الايموجي بين كل رن و الثاني 
@@ -54,28 +67,50 @@ namespace MatchGame
             {
                 if (textBlock.Name != "timeTextBlock")
                 {
-                     textBlock.Visibility = Visibility.Visible;//**
+                    textBlock.Visibility = Visibility.Visible;//**
                     int index = random.Next(animalEmoji.Count);// pick a random number between 0 and the number of emoji left in the list and called "index"
                     string nextEmoji = animalEmoji[index];//لانه قاعدين منعامل مع array  
                     textBlock.Text = nextEmoji;// update the TextBlock with the random emoji 
-                   animalEmoji.RemoveAt(index);// عشان ما يتكررر الايموجي المتشابه اكثر من مرتين ف رح احذفه من الارري الاصلية  
+                    animalEmoji.RemoveAt(index);// عشان ما يتكررر الايموجي المتشابه اكثر من مرتين ف رح احذفه من الارري الاصلية  
                 }
             }
 
-            
+            timer.Start();
+            tenthsOfSecondsElapsed = 0;
+            matchesFound = 0;
         }
 
-       /* TextBlock lastTextBlockClicked;
-        bool findingMatch = false;*/
+        TextBlock lastTextBlockClicked;
+        bool findingMatch = false;
 
         private void TextBlock_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            
+            TextBlock textBlock = sender as TextBlock;
+            if (findingMatch == false)
+            {
+                textBlock.Visibility = Visibility.Hidden;
+                lastTextBlockClicked = textBlock;
+                findingMatch = true;
+            }
+            else if (textBlock.Text == lastTextBlockClicked.Text)
+            {
+                matchesFound++;
+                textBlock.Visibility = Visibility.Hidden;
+                findingMatch = false;
+            }
+            else
+            {
+                lastTextBlockClicked.Visibility = Visibility.Visible;
+                findingMatch = false;
+            }
         }
 
         private void TimeTextBlock_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            
+            if (matchesFound == 8)
+            {
+                SetUpGame();
+            }
         }
     }
 }
